@@ -13,7 +13,26 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'dancing': ['Dancing Script', 'cursive'],
+        'roboto': ['Roboto', 'sans-serif'],
+      },
       colors: {
+        'surface': {
+          primary: "hsl(var(--surface-primary))",
+          secondary: "hsl(var(--surface-secondary))",
+          tertiary: "hsl(var(--surface-tertiary))",
+        },
+        'text': {
+          primary: "hsl(var(--text-primary))",
+          secondary: "hsl(var(--text-secondary))",
+          muted: "hsl(var(--text-muted))",
+        },
+        'border': {
+          subtle: "hsl(var(--border-subtle))",
+          default: "hsl(var(--border-default))",
+          strong: "hsl(var(--border-strong))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -57,6 +76,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      boxShadow: {
+        'subtle': '0 1px 2px 0 hsl(var(--shadow-subtle))',
+        'default': '0 1px 3px 0 hsl(var(--shadow-default)), 0 1px 2px -1px hsl(var(--shadow-default))',
+        'strong': '0 4px 6px -1px hsl(var(--shadow-strong)), 0 2px 4px -2px hsl(var(--shadow-strong))',
       },
       borderRadius: {
         lg: "var(--radius)",
