@@ -1,19 +1,214 @@
 import { useState } from "react";
-import { Toolbar } from "@/components/Toolbar";
-import { PromptSidebar } from "@/components/PromptSidebar";
-import { CanvasArea } from "@/components/CanvasArea";
+import { FashionPipeline } from "@/components/FashionPipeline";
+import { FashionCanvas } from "@/components/FashionCanvas";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
+
+type DesignStep = 'prompt' | 'sketch' | 'colors' | 'model' | 'runway';
+
+interface DesignState {
+  prompt: string;
+  garmentType: string;
+  sketchUrl: string | null;
+  coloredUrl: string | null;
+  modelUrl: string | null;
+  runwayUrl: string | null;
+  selectedColors: string[];
+  currentStep: DesignStep;
+}
 
 export default function FashionDesignTool() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [designState, setDesignState] = useState<DesignState>({
+    prompt: "",
+    garmentType: "dress",
+    sketchUrl: null,
+    coloredUrl: null,
+    modelUrl: null,
+    runwayUrl: null,
+    selectedColors: [],
+    currentStep: 'prompt'
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentOperation, setCurrentOperation] = useState<string>("");
   const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   // Auto-collapse sidebar on mobile
   const shouldCollapseSidebar = isMobile || isSidebarCollapsed;
 
-  const handleGenerate = () => {
-    console.log("Generate design");
-    // TODO: Implement AI generation
+  // Step 1: Generate Sketch
+  const handleGenerateSketch = async () => {
+    if (!designState.prompt.trim()) {
+      toast({
+        title: "No prompt provided",
+        description: "Please enter a design description first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    setCurrentOperation("Generating fashion sketch...");
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/generate-sketch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          prompt: designState.prompt,
+          garmentType: designState.garmentType 
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.imageUrl) {
+        setDesignState(prev => ({
+          ...prev,
+          sketchUrl: data.imageUrl,
+          currentStep: 'colors'
+        }));
+        toast({ title: "Sketch generated!", description: "Ready for coloring." });
+      } else {
+        throw new Error(data.error || 'Failed to generate sketch');
+      }
+    } catch (error) {
+      handleApiError(error, "sketch generation");
+    } finally {
+      setIsGenerating(false);
+      setCurrentOperation("");
+    }
+  };
+
+  // Step 2: Add Colors
+  const handleAddColors = async () => {
+    if (!designState.sketchUrl) return;
+
+    setIsGenerating(true);
+    setCurrentOperation("Adding colors to design...");
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/add-colors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          sketchUrl: designState.sketchUrl,
+          colors: designState.selectedColors,
+          prompt: designState.prompt
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.imageUrl) {
+        setDesignState(prev => ({
+          ...prev,
+          coloredUrl: data.imageUrl,
+          currentStep: 'model'
+        }));
+        toast({ title: "Colors added!", description: "Ready for model generation." });
+      } else {
+        throw new Error(data.error || 'Failed to add colors');
+      }
+    } catch (error) {
+      handleApiError(error, "color generation");
+    } finally {
+      setIsGenerating(false);
+      setCurrentOperation("");
+    }
+  };
+
+  // Step 3: Generate Model Photo
+  const handleGenerateModel = async () => {
+    if (!designState.coloredUrl) return;
+
+    setIsGenerating(true);
+    setCurrentOperation("Creating model photo...");
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/generate-model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          designUrl: designState.coloredUrl,
+          modelType: "diverse fashion model",
+          pose: "standing"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.imageUrl) {
+        setDesignState(prev => ({
+          ...prev,
+          modelUrl: data.imageUrl,
+          currentStep: 'runway'
+        }));
+        toast({ title: "Model photo created!", description: "Ready for runway video." });
+      } else {
+        throw new Error(data.error || 'Failed to generate model photo');
+      }
+    } catch (error) {
+      handleApiError(error, "model generation");
+    } finally {
+      setIsGenerating(false);
+      setCurrentOperation("");
+    }
+  };
+
+  // Step 4: Generate Runway Video
+  const handleGenerateRunway = async () => {
+    if (!designState.modelUrl) return;
+
+    setIsGenerating(true);
+    setCurrentOperation("Creating runway video... (this may take a few minutes)");
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/generate-runway', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          modelPhotoUrl: designState.modelUrl,
+          walkStyle: "elegant runway walk"
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success && data.videoUrl) {
+        setDesignState(prev => ({
+          ...prev,
+          runwayUrl: data.videoUrl
+        }));
+        toast({ title: "Runway video created!", description: "Your fashion show is ready!" });
+      } else {
+        throw new Error(data.error || 'Failed to generate runway video');
+      }
+    } catch (error) {
+      handleApiError(error, "runway video generation");
+    } finally {
+      setIsGenerating(false);
+      setCurrentOperation("");
+    }
+  };
+
+  const handleApiError = (error: unknown, operation: string) => {
+    console.error(`${operation} error:`, error);
+    
+    if (error instanceof Error && error.message.includes('Failed to fetch')) {
+      toast({
+        title: "Server not running",
+        description: "Please start the API server with 'npm run server'",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: `${operation} failed`,
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleUndo = () => {
@@ -28,23 +223,28 @@ export default function FashionDesignTool() {
 
   return (
     <div className="h-screen bg-surface-primary flex flex-col font-roboto">
-      {/* Top Toolbar */}
-      <Toolbar
-        onGenerate={handleGenerate}
-        onUndo={handleUndo}
-        onDownload={handleDownload}
-      />
       
       {/* Main Content */}
       <div className="flex-1 flex">
         {/* Left Sidebar */}
-        <PromptSidebar
+        <FashionPipeline
           isCollapsed={shouldCollapseSidebar}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          designState={designState}
+          onDesignStateChange={setDesignState}
+          onGenerateSketch={handleGenerateSketch}
+          onAddColors={handleAddColors}
+          onGenerateModel={handleGenerateModel}
+          onGenerateRunway={handleGenerateRunway}
+          isGenerating={isGenerating}
         />
         
         {/* Canvas Area */}
-        <CanvasArea />
+        <FashionCanvas 
+          designState={designState}
+          isGenerating={isGenerating}
+          currentOperation={currentOperation}
+        />
       </div>
     </div>
   );

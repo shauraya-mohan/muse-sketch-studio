@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 interface PromptSidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  prompt: string;
+  onPromptChange: (prompt: string) => void;
   className?: string;
 }
 
@@ -22,11 +24,9 @@ const presetPrompts = [
   "Contemporary jumpsuit with wide-leg silhouette"
 ];
 
-export function PromptSidebar({ isCollapsed, onToggleCollapse, className }: PromptSidebarProps) {
-  const [prompt, setPrompt] = useState("");
-
+export function PromptSidebar({ isCollapsed, onToggleCollapse, prompt, onPromptChange, className }: PromptSidebarProps) {
   const handlePresetClick = (presetPrompt: string) => {
-    setPrompt(presetPrompt);
+    onPromptChange(presetPrompt);
   };
 
   if (isCollapsed) {
@@ -74,7 +74,7 @@ export function PromptSidebar({ isCollapsed, onToggleCollapse, className }: Prom
         </label>
         <Textarea
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => onPromptChange(e.target.value)}
           placeholder="Enter your fashion design description..."
           className="min-h-[100px] resize-none border-border-default bg-surface-primary text-text-primary placeholder:text-text-muted focus:border-border-strong"
         />
