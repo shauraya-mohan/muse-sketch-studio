@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { PanelLeftClose, PanelLeftOpen, Sparkles, Palette, User, Video, Check } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Sparkles, Palette, User, Video, Check, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type DesignStep = 'prompt' | 'sketch' | 'colors' | 'model' | 'runway';
@@ -74,6 +75,7 @@ export function FashionPipeline({
   isGenerating,
   className 
 }: FashionPipelineProps) {
+  const navigate = useNavigate();
 
   const updateDesignState = (updates: Partial<DesignState>) => {
     onDesignStateChange({ ...designState, ...updates });
@@ -130,17 +132,30 @@ export function FashionPipeline({
       className
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-border-subtle flex items-center justify-between">
-        <h2 className="font-dancing text-xl font-semibold text-text-primary">
-          Fashion Pipeline
-        </h2>
+      <div className="p-4 border-b border-border-subtle">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-dancing text-xl font-semibold text-text-primary">
+            Fashion Pipeline
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            className="w-8 h-8 p-0 text-text-secondary hover:text-text-primary hover:bg-surface-tertiary"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Collections Link */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          onClick={onToggleCollapse}
-          className="w-8 h-8 p-0 text-text-secondary hover:text-text-primary hover:bg-surface-tertiary"
+          className="w-full text-sm"
+          onClick={() => navigate('/collections')}
         >
-          <PanelLeftClose className="h-4 w-4" />
+          <BookOpen className="h-4 w-4 mr-2" />
+          View Collections
         </Button>
       </div>
 

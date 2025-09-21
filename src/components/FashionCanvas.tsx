@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Sparkles, Loader2, Download, Play } from "lucide-react";
+import { Sparkles, Loader2, Download, Play, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SaveToCollectionModal } from "@/components/SaveToCollectionModal";
+import { AddDesignData } from "@/types/collections";
+import { useToast } from "@/hooks/use-toast";
 
 type DesignStep = 'prompt' | 'sketch' | 'colors' | 'model' | 'runway';
 
@@ -23,6 +27,9 @@ interface FashionCanvasProps {
 }
 
 export function FashionCanvas({ designState, isGenerating, currentOperation, className }: FashionCanvasProps) {
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [currentDesignData, setCurrentDesignData] = useState<AddDesignData | null>(null);
+  const { toast } = useToast();
   
   const downloadImage = (url: string, filename: string) => {
     const link = document.createElement('a');
@@ -31,6 +38,18 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleSaveToCollection = (designData: AddDesignData) => {
+    setCurrentDesignData(designData);
+    setShowSaveModal(true);
+  };
+
+  const handleSaveSuccess = () => {
+    toast({
+      title: "Design saved!",
+      description: "Your design has been added to the collection.",
+    });
   };
 
   const renderContent = () => {
@@ -77,13 +96,28 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
                   Your fashion design is ready for the world
                 </p>
               </div>
-              <Button
-                onClick={() => downloadImage(designState.runwayUrl!, 'runway-video.mp4')}
-                size="sm"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleSaveToCollection({
+                    type: 'runway',
+                    imageUrl: designState.runwayUrl!,
+                    prompt: designState.prompt,
+                    garmentType: designState.garmentType
+                  })}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button
+                  onClick={() => downloadImage(designState.runwayUrl!, 'runway-video.mp4')}
+                  size="sm"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -111,14 +145,29 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
                   Click "Create Runway Video" to continue
                 </p>
               </div>
-              <Button
-                onClick={() => downloadImage(designState.modelUrl!, 'model-photo.png')}
-                size="sm"
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleSaveToCollection({
+                    type: 'model',
+                    imageUrl: designState.modelUrl!,
+                    prompt: designState.prompt,
+                    garmentType: designState.garmentType
+                  })}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button
+                  onClick={() => downloadImage(designState.modelUrl!, 'model-photo.png')}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -146,14 +195,29 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
                   Click "Generate Model Photo" to continue
                 </p>
               </div>
-              <Button
-                onClick={() => downloadImage(designState.coloredUrl!, 'colored-design.png')}
-                size="sm"
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleSaveToCollection({
+                    type: 'colored',
+                    imageUrl: designState.coloredUrl!,
+                    prompt: designState.prompt,
+                    garmentType: designState.garmentType
+                  })}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button
+                  onClick={() => downloadImage(designState.coloredUrl!, 'colored-design.png')}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -181,14 +245,29 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
                   Choose colors in the sidebar to continue
                 </p>
               </div>
-              <Button
-                onClick={() => downloadImage(designState.sketchUrl!, 'fashion-sketch.png')}
-                size="sm"
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => handleSaveToCollection({
+                    type: 'sketch',
+                    imageUrl: designState.sketchUrl!,
+                    prompt: designState.prompt,
+                    garmentType: designState.garmentType
+                  })}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button
+                  onClick={() => downloadImage(designState.sketchUrl!, 'fashion-sketch.png')}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -224,13 +303,22 @@ export function FashionCanvas({ designState, isGenerating, currentOperation, cla
   };
 
   return (
-    <div className={cn(
-      "flex-1 bg-surface-primary",
-      className
-    )}>
-      <div className="w-full h-full">
-        {renderContent()}
+    <>
+      <div className={cn(
+        "flex-1 bg-surface-primary",
+        className
+      )}>
+        <div className="w-full h-full">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+      
+      <SaveToCollectionModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        designData={currentDesignData}
+        onSuccess={handleSaveSuccess}
+      />
+    </>
   );
 }
